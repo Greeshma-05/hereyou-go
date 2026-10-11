@@ -1,0 +1,165 @@
+import '../models/delivery_request.dart';
+import '../models/delivery_status.dart';
+import '../models/route_stop.dart';
+
+abstract final class DemoData {
+  static final startTime = DateTime(2026, 10, 11, 9);
+  static const stops = [
+    RouteStop(
+      'Bengaluru',
+      'KSR station · Journey origin',
+      latitude: 12.9784,
+      longitude: 77.5696,
+    ),
+    RouteStop(
+      'Kengeri',
+      'Station forecourt · Pickup area',
+      latitude: 12.9175,
+      longitude: 77.4834,
+    ),
+    RouteStop(
+      'Bidadi',
+      'Station entrance · Handover stop',
+      latitude: 12.7988,
+      longitude: 77.3848,
+    ),
+    RouteStop(
+      'Ramanagara',
+      'Station entrance',
+      latitude: 12.7221,
+      longitude: 77.2807,
+    ),
+    RouteStop(
+      'Mandya',
+      'Station entrance',
+      latitude: 12.5234,
+      longitude: 76.8958,
+    ),
+    RouteStop(
+      'Mysuru',
+      'Junction · Journey destination',
+      latitude: 12.3169,
+      longitude: 76.6458,
+    ),
+  ];
+  static const pickup = RouteStop(
+    'Platform Pantry',
+    'Kengeri station forecourt · Counter 2',
+    latitude: 12.9179,
+    longitude: 77.4842,
+  );
+  static const requests = [
+    DeliveryRequest(
+      id: 'RR-2401',
+      traveler: 'Ananya Rao',
+      items: [OrderItem('Travel snack box', 1), OrderItem('Water bottle', 2)],
+      category: 'Food & hydration',
+      pickup: pickup,
+      handover: RouteStop(
+        'Bidadi station',
+        'Main entrance · Meet the traveler outside',
+        latitude: 12.7988,
+        longitude: 77.3848,
+      ),
+      pickupKm: .8,
+      detourKm: .6,
+      waitMinutes: 3,
+      availableMinutes: 35,
+      rewardPaise: 12000,
+      demoCode: '246810',
+    ),
+    DeliveryRequest(
+      id: 'RR-2402',
+      traveler: 'Kabir Shah',
+      items: [OrderItem('USB-C cable', 1), OrderItem('Travel adapter', 1)],
+      category: 'Travel tech',
+      pickup: RouteStop(
+        'Journey Tech',
+        'Kengeri main road · Shop 4',
+        latitude: 12.9095,
+        longitude: 77.4831,
+      ),
+      handover: RouteStop(
+        'Ramanagara station',
+        'West entrance · Waiting area',
+        latitude: 12.7221,
+        longitude: 77.2807,
+      ),
+      pickupKm: 1.5,
+      detourKm: 2.1,
+      waitMinutes: 4,
+      availableMinutes: 32,
+      rewardPaise: 16500,
+      demoCode: '135790',
+    ),
+    DeliveryRequest(
+      id: 'RR-2403',
+      traveler: 'Meera Iyer',
+      items: [OrderItem('Comfort travel kit', 1)],
+      category: 'Travel comfort',
+      pickup: RouteStop(
+        'Comfort Corner',
+        'Bidadi market · Counter 1',
+        latitude: 12.8002,
+        longitude: 77.3841,
+      ),
+      handover: RouteStop(
+        'Bidadi station',
+        'Main entrance',
+        latitude: 12.7988,
+        longitude: 77.3848,
+      ),
+      pickupKm: 1.2,
+      detourKm: 1.8,
+      waitMinutes: 6,
+      availableMinutes: 18,
+      rewardPaise: 14000,
+      demoCode: '112233',
+    ),
+    DeliveryRequest(
+      id: 'RR-2404',
+      traveler: 'Dev Menon',
+      items: [OrderItem('Rain poncho', 2)],
+      category: 'Outdoor essentials',
+      pickup: RouteStop(
+        'Trail Supply',
+        'North Bengaluru · Shop 12',
+        latitude: 13.018,
+        longitude: 77.557,
+      ),
+      handover: RouteStop(
+        'Tumakuru bus stop',
+        'Public forecourt',
+        latitude: 13.339,
+        longitude: 77.101,
+      ),
+      pickupKm: 4,
+      detourKm: 12,
+      waitMinutes: 8,
+      availableMinutes: 65,
+      rewardPaise: 22000,
+      demoCode: '445566',
+      matchesRoute: false,
+    ),
+    DeliveryRequest(
+      id: 'RR-2399',
+      traveler: 'Nila S.',
+      items: [OrderItem('Travel pillow', 1)],
+      category: 'Travel comfort',
+      pickup: pickup,
+      handover: RouteStop(
+        'Bidadi station',
+        'Main entrance',
+        latitude: 12.7988,
+        longitude: 77.3848,
+      ),
+      pickupKm: 1,
+      detourKm: 1,
+      waitMinutes: 3,
+      availableMinutes: 30,
+      rewardPaise: 10000,
+      demoCode: '998877',
+      status: DeliveryStatus.cancelled,
+    ),
+  ];
+}

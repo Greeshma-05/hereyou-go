@@ -1,0 +1,67 @@
+{
+  "project_info": {
+    "project_number": "552570953286",
+    "project_id": "arjunlayover",
+    "storage_bucket": "arjunlayover.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:552570953286:android:6afe9be778d2ae0c04b447",
+        "android_client_info": {
+          "package_name": "com.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAofm8As8kD46HWvvLfLwHDMTEkf_D_8oU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:552570953286:android:603e7fe6e911a65404b447",
+        "android_client_info": {
+          "package_name": "com.hereyougo.delivery"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAofm8As8kD46HWvvLfLwHDMTEkf_D_8oU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:552570953286:android:d1a9b1d05162133204b447",
+        "android_client_info": {
+          "package_name": "com.hereyougo.vendor"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAofm8As8kD46HWvvLfLwHDMTEkf_D_8oU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

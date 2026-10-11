@@ -1,0 +1,61 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "RouteRescue \u00b7 Android demo",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart"
+    },
+    {
+      "name": "RouteRescue \u00b7 Browser preview",
+      "request": "launch",
+      "type": "dart",
+      "deviceId": "chrome",
+      "program": "lib/main.dart"
+    },
+    {
+      "name": "Here You Go \u00b7 Vendor",
+      "request": "launch",
+      "type": "dart",
+      "cwd": "${workspaceFolder}/vendor_app",
+      "program": "lib/main.dart"
+    },
+    {
+      "name": "Here You Go \u00b7 Delivery",
+      "request": "launch",
+      "type": "dart",
+      "cwd": "${workspaceFolder}/delivery_app",
+      "program": "lib/main.dart"
+    },
+    {
+      "name": "Here You Go \u00b7 Customer local backend",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "toolArgs": [
+        "--dart-define-from-file=config/firebase.integration.json"
+      ]
+    },
+    {
+      "name": "Here You Go \u00b7 Vendor local backend",
+      "request": "launch",
+      "type": "dart",
+      "cwd": "${workspaceFolder}/vendor_app",
+      "program": "lib/main.dart",
+      "toolArgs": [
+        "--dart-define-from-file=../config/firebase.integration.json"
+      ]
+    },
+    {
+      "name": "Here You Go \u00b7 Delivery local backend",
+      "request": "launch",
+      "type": "dart",
+      "cwd": "${workspaceFolder}/delivery_app",
+      "program": "lib/main.dart",
+      "toolArgs": [
+        "--dart-define-from-file=../config/firebase.integration.json"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+# No paid instance or database. Existing Firebase Auth and Spark Firestore remain.
+services:
+  - type: web
+    name: here-you-go-orders
+    runtime: node
+    plan: free
+    region: singapore
+    rootDir: functions
+    buildCommand: npm ci --omit=dev
+    startCommand: npm start
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: NODE_ENV
+        value: production
+      - key: GOOGLE_CLOUD_PROJECT
+        value: arjunlayover
+      - key: GOOGLE_APPLICATION_CREDENTIALS
+        value: /etc/secrets/firebase-service-account.json

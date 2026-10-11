@@ -1,0 +1,49 @@
+name: route_rescue
+description: "Here You Go: essentials for the journey."
+publish_to: 'none'
+version: 0.1.2+3
+
+environment:
+  sdk: ^3.11.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  provider: ^6.1.5+1
+  flutter_map: ^8.3.2
+  latlong2: ^0.9.1
+  geolocator: 14.0.2
+  # Keep the Android implementation on AGP 8 for Flutter 3.41's template.
+  geolocator_android: 5.0.2
+  # The plugin implementation avoids a native FFI linker failure on this Mac.
+  # This constrains an existing flutter_map transitive dependency.
+  path_provider_foundation: 2.5.1
+  # Plugin-based Android cache storage avoids an extra JNI / Android 35 toolchain.
+  path_provider_android: 2.2.22
+  shared_preferences: ^2.5.4
+  intl: ^0.20.2
+  url_launcher: ^6.3.2
+  http: ^1.6.0
+  firebase_core: ^4.15.0
+  firebase_auth: ^6.7.0
+  cloud_firestore: ^6.10.0
+  cloud_functions: ^6.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  integration_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/fonts/OFL.txt
+  fonts:
+    - family: OpenDyslexic
+      fonts:
+        - asset: assets/fonts/OpenDyslexic-Regular.otf
+          weight: 400
+        - asset: assets/fonts/OpenDyslexic-Bold.otf
+          weight: 700

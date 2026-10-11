@@ -1,0 +1,16 @@
+{
+  "name": "route-rescue-firebase-tests",
+  "private": true,
+  "scripts": {
+    "test:standalone": "firebase emulators:exec --config firebase.test.json --only firestore,auth --project demo-route-rescue \"node test/run_standalone.cjs\"",
+    "test:rules": "firebase emulators:exec --only firestore,auth --project demo-route-rescue \"node --test test/firebase/security.test.cjs\"",
+    "test:fulfillment": "firebase emulators:exec --config firebase.test.json --only firestore,auth,functions --project demo-route-rescue \"node --test --test-concurrency=1 test/firebase/*.test.cjs\""
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^5.0.0",
+    "firebase": "^12.0.0"
+  },
+  "overrides": {
+    "@grpc/grpc-js": "^1.13.6"
+  }
+}

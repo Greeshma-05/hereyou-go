@@ -1,0 +1,21 @@
+{
+  "name": "here-you-go-fulfillment",
+  "private": true,
+  "main": "index.js",
+  "engines": {
+    "node": "22"
+  },
+  "scripts": {
+    "check": "node --check index.js && node --check server.js && node --check admin.js",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "4.22.3",
+    "firebase-admin": "^13.0.0",
+    "firebase-functions": "^6.0.0",
+    "geofire-common": "^6.0.0"
+  },
+  "overrides": {
+    "uuid": "11.1.1"
+  }
+}

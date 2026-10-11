@@ -1,0 +1,7 @@
+{
+  "dart.flutterSdkPath": "C:\\Users\\arjun\\Downloads\\flutter_windows_3.47.4-stable\\flutter",
+  "terminal.integrated.env.windows": {
+    "PATH": "C:\\Users\\arjun\\Downloads\\flutter_windows_3.47.4-stable\\flutter\\bin;C:\\Program Files\\Android\\Android Studio\\jbr\\bin;${env:PATH}",
+    "JAVA_HOME": "C:\\Program Files\\Android\\Android Studio\\jbr"
+  }
+}

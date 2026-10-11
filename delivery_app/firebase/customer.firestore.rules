@@ -1,0 +1,74 @@
+// Customer rules supplied for integration review. Not deployed by this project.
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function owner(uid) { return request.auth != null && request.auth.uid == uid; }
+    function text(value, max) { return value is string && value.size() > 0 && value.size() <= max; }
+    function journey(j) {
+      return j is map && j.keys().hasOnly(['mode', 'operatorName', 'boarding', 'destination', 'departure', 'pickup'])
+        && j.mode in ['bus', 'train'] && text(j.operatorName, 120)
+        && text(j.boarding, 120) && text(j.destination, 120) && j.boarding != j.destination
+        && j.departure is timestamp && j.pickup is map
+        && j.pickup.keys().hasOnly(['id', 'name', 'latitude', 'longitude', 'instructions'])
+        && text(j.pickup.id, 120) && text(j.pickup.name, 160) && text(j.pickup.instructions, 1000)
+        && j.pickup.latitude is number && j.pickup.latitude >= -90 && j.pickup.latitude <= 90
+        && j.pickup.longitude is number && j.pickup.longitude >= -180 && j.pickup.longitude <= 180;
+    }
+    function profile(d) {
+      return d.keys().hasOnly(['displayName', 'email', 'createdAt', 'updatedAt'])
+        && text(d.displayName, 60) && text(d.email, 254)
+        && d.email == request.auth.token.email
+        && d.createdAt is timestamp && d.updatedAt == request.time;
+    }
+    match /users/{uid} {
+      allow get: if owner(uid);
+      allow list, delete: if false;
+      allow create: if owner(uid) && profile(request.resource.data) && request.resource.data.createdAt == request.time;
+      allow update: if owner(uid) && profile(request.resource.data)
+        && request.resource.data.createdAt == resource.data.createdAt;
+
+      match /journeys/{journeyId} {
+        allow read: if owner(uid);
+        allow create: if owner(uid)
+          && request.resource.data.keys().hasOnly(['schemaVersion', 'journey', 'createdAt', 'clientCreatedAt'])
+          && request.resource.data.schemaVersion == 1
+          && request.resource.data.createdAt == request.time
+          && request.resource.data.clientCreatedAt is timestamp
+          && journey(request.resource.data.journey);
+        allow update, delete: if false;
+      }
+      match /orders/{orderId} {
+        allow read: if owner(uid);
+        // These are immutable preview records, not payment or fulfillment commands.
+        // A trusted server must validate catalog prices/stock for real orders.
+        allow create: if owner(uid)
+          && request.resource.data.keys().hasOnly(['schemaVersion', 'reference', 'createdAt', 'clientCreatedAt', 'vendorId', 'vendorName', 'journey', 'items', 'deliveryFeePaise', 'platformFeePaise', 'totalPaise', 'verificationCode', 'status', 'isPreview'])
+          && request.resource.data.schemaVersion == 1
+          && request.resource.data.reference == orderId
+          && request.resource.data.createdAt == request.time
+          && request.resource.data.clientCreatedAt is timestamp
+          && text(request.resource.data.vendorId, 120) && text(request.resource.data.vendorName, 160)
+          && request.resource.data.isPreview == true && request.resource.data.status == 'placed'
+          && journey(request.resource.data.journey)
+          && request.resource.data.items is list && request.resource.data.items.size() > 0 && request.resource.data.items.size() <= 50
+          && request.resource.data.deliveryFeePaise is int && request.resource.data.deliveryFeePaise >= 0
+          && request.resource.data.platformFeePaise is int && request.resource.data.platformFeePaise >= 0
+          && request.resource.data.totalPaise is int && request.resource.data.totalPaise >= 0 && request.resource.data.totalPaise <= 100000000
+          && request.resource.data.verificationCode is string && request.resource.data.verificationCode.matches('^[0-9]{4}$');
+        allow update, delete: if false;
+      }
+      match /preferences/{preferenceId} {
+        allow read: if owner(uid);
+        allow create, update: if owner(uid) && preferenceId == 'general'
+          && request.resource.data.keys().hasOnly(['notifications', 'checklist', 'updatedAt'])
+          && request.resource.data.notifications is bool
+          && request.resource.data.checklist is list && request.resource.data.checklist.size() <= 5
+          && request.resource.data.checklist.hasOnly(['Drinking water', 'Snacks', 'Personal hygiene', 'Baby essentials', 'Tickets & ID'])
+          && request.resource.data.updatedAt == request.time;
+        allow delete: if false;
+      }
+    }
+    // Catalog management and all other paths are server-only until implemented.
+    match /{document=**} { allow read, write: if false; }
+  }
+}

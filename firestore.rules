@@ -1,0 +1,168 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function owner(uid) { return request.auth != null && request.auth.uid == uid; }
+    function text(value, max) { return value is string && value.size() > 0 && value.size() <= max; }
+    function journey(j) {
+      return j is map && j.keys().hasOnly(['mode', 'operatorName', 'boarding', 'destination', 'departure', 'pickup'])
+        && j.mode in ['bus', 'train'] && text(j.operatorName, 120)
+        && text(j.boarding, 120) && text(j.destination, 120) && j.boarding != j.destination
+        && j.departure is timestamp && j.pickup is map
+        && j.pickup.keys().hasOnly(['id', 'name', 'latitude', 'longitude', 'instructions'])
+        && text(j.pickup.id, 120) && text(j.pickup.name, 160) && text(j.pickup.instructions, 1000)
+        && j.pickup.latitude is number && j.pickup.latitude >= -90 && j.pickup.latitude <= 90
+        && j.pickup.longitude is number && j.pickup.longitude >= -180 && j.pickup.longitude <= 180;
+    }
+    function profile(d) {
+      return d.keys().hasOnly(['displayName', 'email', 'createdAt', 'updatedAt'])
+        && text(d.displayName, 60) && text(d.email, 254)
+        && d.email == request.auth.token.email
+        && d.createdAt is timestamp && d.updatedAt == request.time;
+    }
+    match /users/{uid} {
+      allow get: if owner(uid);
+      allow list, delete: if false;
+      allow create: if owner(uid) && profile(request.resource.data) && request.resource.data.createdAt == request.time;
+      allow update: if owner(uid) && profile(request.resource.data)
+        && request.resource.data.createdAt == resource.data.createdAt;
+
+      match /journeys/{journeyId} {
+        allow read: if owner(uid);
+        allow create: if owner(uid)
+          && request.resource.data.keys().hasOnly(['schemaVersion', 'journey', 'createdAt', 'clientCreatedAt'])
+          && request.resource.data.schemaVersion == 1
+          && request.resource.data.createdAt == request.time
+          && request.resource.data.clientCreatedAt is timestamp
+          && journey(request.resource.data.journey);
+        allow update, delete: if false;
+      }
+      match /orders/{orderId} {
+        allow read: if owner(uid);
+        // These are immutable preview records, not payment or fulfillment commands.
+        // A trusted server must validate catalog prices/stock for real orders.
+        allow create: if owner(uid)
+          && request.resource.data.keys().hasOnly(['schemaVersion', 'reference', 'createdAt', 'clientCreatedAt', 'vendorId', 'vendorName', 'journey', 'items', 'deliveryFeePaise', 'platformFeePaise', 'totalPaise', 'verificationCode', 'status', 'isPreview'])
+          && request.resource.data.schemaVersion == 1
+          && request.resource.data.reference == orderId
+          && request.resource.data.createdAt == request.time
+          && request.resource.data.clientCreatedAt is timestamp
+          && text(request.resource.data.vendorId, 120) && text(request.resource.data.vendorName, 160)
+          && request.resource.data.isPreview == true && request.resource.data.status == 'placed'
+          && journey(request.resource.data.journey)
+          && request.resource.data.items is list && request.resource.data.items.size() > 0 && request.resource.data.items.size() <= 50
+          && request.resource.data.deliveryFeePaise is int && request.resource.data.deliveryFeePaise >= 0
+          && request.resource.data.platformFeePaise is int && request.resource.data.platformFeePaise >= 0
+          && request.resource.data.totalPaise is int && request.resource.data.totalPaise >= 0 && request.resource.data.totalPaise <= 100000000
+          && request.resource.data.verificationCode is string && request.resource.data.verificationCode.matches('^[0-9]{4}$');
+        allow update, delete: if false;
+      }
+      match /preferences/{preferenceId} {
+        allow read: if owner(uid);
+        allow create, update: if owner(uid) && preferenceId == 'general'
+          && request.resource.data.keys().hasOnly(['notifications', 'checklist', 'updatedAt'])
+          && request.resource.data.notifications is bool
+          && request.resource.data.checklist is list && request.resource.data.checklist.size() <= 5
+          && request.resource.data.checklist.hasOnly(['Drinking water', 'Snacks', 'Personal hygiene', 'Baby essentials', 'Tickets & ID'])
+          && request.resource.data.updatedAt == request.time;
+        allow delete: if false;
+      }
+    }
+    function optionalText(value, max) { return value is string && value.size() <= max; }
+    function category(value) { return value in ['food', 'medicine', 'hygiene', 'baby', 'travel']; }
+    function shop(d, uid) {
+      return d.keys().hasOnly(['schemaVersion', 'ownerUid', 'name', 'category', 'address', 'latitude', 'longitude', 'description', 'preparationMinutes', 'isOpen', 'isPublished', 'createdAt', 'updatedAt'])
+        && d.schemaVersion == 1 && d.ownerUid == uid && text(d.name, 160) && category(d.category)
+        && text(d.address, 300) && text(d.description, 1000)
+        && d.latitude is number && d.latitude >= -90 && d.latitude <= 90
+        && d.longitude is number && d.longitude >= -180 && d.longitude <= 180
+        && d.preparationMinutes is int && d.preparationMinutes >= 0 && d.preparationMinutes <= 240
+        && d.isOpen is bool && d.isPublished is bool
+        && d.createdAt is timestamp && d.updatedAt == request.time
+        && existsAfter(/databases/$(database)/documents/vendorAccounts/$(uid))
+        && (d.category != 'medicine' || text(getAfter(/databases/$(database)/documents/vendorAccounts/$(uid)).data.licenseNumber, 120));
+    }
+    function merchant(d) {
+      return d.keys().hasOnly(['ownerName', 'email', 'phone', 'licenseNumber', 'createdAt', 'updatedAt'])
+        && text(d.ownerName, 80) && d.email == request.auth.token.email && text(d.email, 254)
+        && d.phone is string && d.phone.matches('^[+0-9 ()-]{7,24}$')
+        && optionalText(d.licenseNumber, 120) && d.createdAt is timestamp && d.updatedAt == request.time;
+    }
+    match /vendorAccounts/{uid} {
+      allow get: if owner(uid);
+      allow list, delete: if false;
+      allow create: if owner(uid) && merchant(request.resource.data) && request.resource.data.createdAt == request.time;
+      allow update: if owner(uid) && merchant(request.resource.data)
+        && request.resource.data.createdAt == resource.data.createdAt
+        && (get(/databases/$(database)/documents/vendors/$(uid)).data.category != 'medicine' || text(request.resource.data.licenseNumber, 120));
+    }
+    match /vendors/{uid} {
+      // Only the public shop profile is readable by customers, including guests.
+      allow read: if owner(uid) || resource.data.isPublished == true;
+      allow create: if owner(uid) && shop(request.resource.data, uid) && request.resource.data.createdAt == request.time;
+      allow update: if owner(uid) && shop(request.resource.data, uid)
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.category == resource.data.category;
+      allow delete: if false;
+      match /products/{productId} {
+        function parent() { return get(/databases/$(database)/documents/vendors/$(uid)).data; }
+        function product(d) {
+          return d.keys().hasOnly(['schemaVersion', 'vendorId', 'name', 'category', 'pricePaise', 'stock', 'unit', 'description', 'strength', 'dosageForm', 'genericName', 'brand', 'manufacturer', 'expiryDate', 'prescriptionRequired', 'isPublished', 'createdAt', 'updatedAt'])
+            && d.schemaVersion == 1 && d.vendorId == uid && text(d.name, 160) && d.category == parent().category
+            && d.pricePaise is int && d.pricePaise > 0 && d.pricePaise <= 10000000
+            && d.stock is int && d.stock >= 0 && d.stock <= 100000
+            && text(d.unit, 80) && text(d.description, 2000)
+            && optionalText(d.strength, 80) && optionalText(d.dosageForm, 40)
+            && optionalText(d.genericName, 160) && optionalText(d.brand, 120) && optionalText(d.manufacturer, 160)
+            && d.expiryDate is string && (d.expiryDate == '' || d.expiryDate.matches('^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$'))
+            && d.prescriptionRequired is bool && d.isPublished is bool
+            && (d.category != 'medicine' || (text(d.strength, 80) && text(d.dosageForm, 40) && text(d.manufacturer, 160) && d.expiryDate != ''))
+            && d.createdAt is timestamp && d.updatedAt == request.time;
+        }
+        allow read: if owner(uid) || (parent().isPublished == true && resource.data.isPublished == true);
+        allow create: if owner(uid) && product(request.resource.data) && request.resource.data.createdAt == request.time;
+        allow update: if owner(uid) && product(request.resource.data) && request.resource.data.createdAt == resource.data.createdAt;
+        // Archiving preserves historical references and removes the item from public queries.
+        allow delete: if false;
+      }
+    }
+    // Fulfillment mutations go through the authenticated, transactional backend.
+    // Offers are returned by its 5 km query; couriers cannot enumerate orders.
+    match /orders/{orderId} {
+      allow read: if request.auth != null &&
+        (resource.data.customerUid == request.auth.uid ||
+         resource.data.vendorId == request.auth.uid ||
+         resource.data.courierId == request.auth.uid);
+      allow write: if false;
+    }
+    match /couriers/{uid} {
+      function contact(d) {
+        return text(d.name, 80)
+          && d.phone is string && d.phone.matches('^[+0-9 ()-]{7,24}$')
+          && d.vehicle in ['Bicycle', 'Motorbike', 'Car']
+          && d.updatedAt == request.time;
+      }
+      allow get: if owner(uid);
+      // Registration works on Spark. Only the backend can manage availability,
+      // GPS and assignments; profile edits cannot add or remove those fields.
+      allow create: if owner(uid) && contact(request.resource.data)
+        && request.resource.data.keys().hasOnly(['name', 'phone', 'vehicle', 'online', 'activeOrderId', 'createdAt', 'updatedAt'])
+        && request.resource.data.online == false
+        && request.resource.data.activeOrderId == null
+        && request.resource.data.createdAt == request.time;
+      allow update: if owner(uid) && contact(request.resource.data)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'phone', 'vehicle', 'updatedAt']);
+      allow list, delete: if false;
+    }
+    match /orderTracking/{orderId} {
+      function assignedOrder() { return get(/databases/$(database)/documents/orders/$(orderId)).data; }
+      allow read: if request.auth != null &&
+        (assignedOrder().customerUid == request.auth.uid ||
+         assignedOrder().vendorId == request.auth.uid ||
+         assignedOrder().courierId == request.auth.uid);
+      allow write: if false;
+    }
+    match /orderSecrets/{orderId} { allow read, write: if false; }
+    // Unknown paths remain private.
+    match /{document=**} { allow read, write: if false; }
+  }
+}

@@ -1,0 +1,117 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "vendors",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "isPublished",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "latitude",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "vendors",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "isPublished",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "latitude",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "longitude",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "orders",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "courierId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "pickupGeohash",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "couriers",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "online",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "activeOrderId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "locationGeohash",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "orders",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "orders",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "totalPaise",
+          "order": "ASCENDING"
+        }
+      ]
+    }
+  ],
+  "fieldOverrides": [
+    {
+      "collectionGroup": "orders",
+      "fieldPath": "items",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "orders",
+      "fieldPath": "journey",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "journeys",
+      "fieldPath": "journey",
+      "indexes": []
+    }
+  ]
+}
