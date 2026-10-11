@@ -6,6 +6,14 @@ The separate [Here You Go Vendor app](vendor_app/README.md) registers shops and 
 
 The vendor Android app is registered with Firebase. The existing catalog rules and location indexes were tested locally and deployed to `arjunlayover` on 11 October 2026 with the project owner's approval.
 
+## Super-admin panel
+
+The [super-admin website](https://here-you-go-admin.godlykmathews.chatgpt.site) monitors orders, vendors, customers, delivery partners and activity across the three apps. Its complete source is tracked in [`admin_panel/`](admin_panel/README.md), so a normal clone of this repository includes the panel without submodule setup.
+
+Preview it with `node admin_panel/scripts/preview.cjs`, then open `http://127.0.0.1:4173`. The preview connects to the existing Firebase and Render services and requires an approved admin account. Admin passwords and service-account credentials are never stored in this repository. See the [panel setup guide](admin_panel/README.md) for authorization, isolated emulator preview and publication details.
+
+The admin API lives in `functions/admin.js`; its authorization tests are in `test/firebase/admin.test.cjs`. Run `npm run test:standalone` with Java 21+ to test the backend using isolated Firebase emulators. Website publication and the Render service deployment remain separate from pushing this repository.
+
 ## Connected delivery workflow — 11 October 2026
 
 The standalone Node.js service and native three-app workflow are implemented and tested. The owner chose Render Free while keeping Firebase billing disabled. The shared Firestore rules and fulfillment indexes are deployed. The Render Free service is live at `https://here-you-go-orders.onrender.com/fulfillment` and the complete live order flow has been verified. All three apps default to this endpoint; install the connected 0.1.2 releases. Courier contact registration already works directly through owner-only Firestore rules. Live checkout, availability, assignment and delivery transitions use the authenticated order service.

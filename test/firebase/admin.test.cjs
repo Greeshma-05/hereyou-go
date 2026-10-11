@@ -46,7 +46,7 @@ beforeEach(async () => {
 test('only the invited verified identity can activate admin; ordinary accounts and unverified emails are rejected', async () => {
   for (const c of [owner, other, unverified]) await assert.rejects(c.call('adminDashboard'), e => e.code === 'functions/permission-denied');
   await assert.rejects(other.call('adminClaimAccess'), e => e.code === 'functions/permission-denied');
-  await assert.rejects(unverified.call('adminClaimAccess'), /Verify/);
+  await assert.rejects(unverified.call('adminClaimAccess'), e => e.code === 'functions/permission-denied');
   const role = await owner.call('adminClaimAccess');
   assert.equal(role.uid, owner.uid); assert.equal(role.role, 'superadmin');
   assert.equal((await owner.call('adminSession')).email, owner.email);
@@ -54,6 +54,23 @@ test('only the invited verified identity can activate admin; ordinary accounts a
   await assertFails(setDoc(doc(other.db, invitePath(other)), { enabled: true, email: other.email }));
   await assertFails(getDoc(doc(owner.db, invitePath(owner))));
   await assertFails(setDoc(doc(owner.db, 'adminActivity/forged'), { type: 'orderCreated' }));
+});
+test('owner-approved UID can sign in without email verification; an invitation alone cannot bypass verification', async () => {
+  assert.equal(unverified.user.emailVerified, false);
+  await assert.rejects(unverified.call('adminClaimAccess'), e => e.code === 'functions/permission-denied');
+  await admin(db => setDoc(doc(db, `adminAccess/${unverified.uid}`), { email: unverified.email, role: 'superadmin', enabled: true, requireEmailVerification: false }));
+  assert.equal((await unverified.call('adminClaimAccess')).uid, unverified.uid);
+  assert.equal((await unverified.call('adminDashboard')).counts.orders, 0);
+  await assertFails(updateDoc(doc(unverified.db, `adminAccess/${unverified.uid}`), { requireEmailVerification: false }));
+  await admin(db => updateDoc(doc(db, `adminAccess/${unverified.uid}`), { email: other.email }));
+  await assert.rejects(unverified.call('adminDashboard'), e => e.code === 'functions/permission-denied');
+  await admin(db => updateDoc(doc(db, `adminAccess/${unverified.uid}`), { email: unverified.email, enabled: false }));
+  await assert.rejects(unverified.call('adminClaimAccess'), e => e.code === 'functions/permission-denied');
+});
+test('existing admin roles still require verification unless the project owner explicitly opts that UID out', async () => {
+  await admin(db => setDoc(doc(db, `adminAccess/${unverified.uid}`), { email: unverified.email, role: 'superadmin', enabled: true }));
+  await assert.rejects(unverified.call('adminClaimAccess'), e => e.code === 'functions/permission-denied');
+  await assert.rejects(unverified.call('adminSession'), e => e.code === 'functions/permission-denied');
 });
 test('revocation is immediate and cannot be undone by claiming the original invitation again', async () => {
   await owner.call('adminClaimAccess');

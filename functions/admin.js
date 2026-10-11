@@ -41,12 +41,15 @@ function audit(tx, event) {
 async function requireAdmin(auth) {
   if (!auth) error('Sign in to continue.', 'unauthenticated');
   const role = (await getFirestore().doc(`adminAccess/${auth.uid}`).get()).data();
-  if (!role || role.role !== 'superadmin' || role.enabled !== true || auth.token.email_verified !== true
-    || !auth.token.email || role.email !== auth.token.email.toLowerCase()) error('This account does not have verified super-admin access.', 'permission-denied');
+  // Only a privileged project owner can waive verification on an existing UID.
+  // An unverified email invitation alone never grants admin access.
+  if (!role || role.role !== 'superadmin' || role.enabled !== true
+    || role.requireEmailVerification !== false && auth.token.email_verified !== true
+    || !auth.token.email || role.email !== auth.token.email.toLowerCase()) error('This account does not have approved super-admin access.', 'permission-denied');
   return { uid: auth.uid, email: role.email, role: 'superadmin' };
 }
 async function claimAccess(auth) {
-  if (!auth?.token.email || auth.token.email_verified !== true) error('Verify your email, then sign in again to activate access.', 'permission-denied');
+  if (!auth?.token.email) error('Sign in with your approved admin account.', 'permission-denied');
   const db = getFirestore(), email = auth.token.email.toLowerCase();
   const inviteRef = db.doc(`adminInvites/${createHash('sha256').update(email).digest('hex')}`);
   const roleRef = db.doc(`adminAccess/${auth.uid}`);
@@ -54,6 +57,7 @@ async function claimAccess(auth) {
     const [inviteDoc, roleDoc] = await tx.getAll(inviteRef, roleRef);
     const invite = inviteDoc.data();
     if (roleDoc.exists) return; // Revoked accounts must be explicitly re-enabled by the project owner.
+    if (auth.token.email_verified !== true) error('This account has not been approved for admin access. Contact the project owner.', 'permission-denied');
     if (invite?.enabled !== true || invite.email !== email || invite.usedBy && invite.usedBy !== auth.uid) error('No admin invitation is available for this account.', 'permission-denied');
     tx.create(roleRef, { role: 'superadmin', email, enabled: true, createdAt: FieldValue.serverTimestamp() });
     tx.update(inviteRef, { usedBy: auth.uid, claimedAt: FieldValue.serverTimestamp() });

@@ -56,3 +56,6 @@ config/firebase.android.json
 *-service-account.json
 service-account*.json
 releases/
+
+# Local metadata retained when importing separately hosted source repositories.
+/.local-repositories/
